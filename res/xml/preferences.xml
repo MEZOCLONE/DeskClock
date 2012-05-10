@@ -106,6 +106,16 @@ limitations under the License.
     <PreferenceScreen
       android:key="pref_background_color" 
       android:title="@string/pref_title_background_color" />
+    
+    <CheckBoxPreference
+      android:key="pref_use_background_image"
+      android:title="@string/pref_title_use_background_image"
+      android:defaultValue="@string/pref_default_use_background_image" />
+    
+    <PreferenceScreen
+      android:key="pref_background_image"
+      android:title="@string/pref_title_background_image" />
+    
       
     <ListPreference
       android:key="pref_font"

@@ -16,9 +16,11 @@
 
 package com.slushpupie.deskclock;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -30,6 +32,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 public class DeskClockPreferenceActivity extends PreferenceActivity implements
     OnSharedPreferenceChangeListener {
 
+  private static final int SELECT_PICTURE_ACTIVITY_REQUEST_CODE = 93;
   ListPreference mKeepScreenOn;
   SeekBarPreference mScreenBrightness;
   SeekBarPreference mButtonBrightness;
@@ -81,6 +84,17 @@ public class DeskClockPreferenceActivity extends PreferenceActivity implements
         return true;
       }
     });
+
+    Preference bgImagePref = findPreference("pref_background_image");
+    bgImagePref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+      public boolean onPreferenceClick(Preference preference) {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, SELECT_PICTURE_ACTIVITY_REQUEST_CODE);
+        return true;
+      }
+    });
+
   }
 
   @Override
@@ -115,6 +129,23 @@ public class DeskClockPreferenceActivity extends PreferenceActivity implements
     mScale.setSummary(getString(R.string.pref_summary_scale) + " " + mScale.getProgress() + "%");
 
     prefs.registerOnSharedPreferenceChangeListener(this);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
+    super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+    switch (requestCode) {
+      case SELECT_PICTURE_ACTIVITY_REQUEST_CODE:
+        if (resultCode == RESULT_OK) {
+          Uri selectedImage = imageReturnedIntent.getData();
+          SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(
+              DeskClockPreferenceActivity.this).edit();
+          prefs.putString("pref_background_image", selectedImage.toString());
+          prefs.commit();
+          break;
+        }
+    }
   }
 
   @Override

@@ -23,14 +23,15 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 public class DisplayView extends View {
 
   private String time = "88:88";
   private String wideTime = "88:88";
-
   private Paint paint;
 
   private boolean screenSaver = false;

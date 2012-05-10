@@ -27,15 +27,21 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.format.DateFormat;
@@ -111,6 +117,9 @@ public class DeskClock extends FragmentActivity implements
   private String lastChangelog = "";
   private int prefsScale = 100;
   private boolean prefsUndockExit = false;
+  private boolean prefsUseBackgroundImage = false;
+  private String prefsBackgroundImage = null;
+  private Uri prefsBackgroundImageUri = null;
   
   public void acknoledgeChangelog() {
     SharedPreferences prefs = PreferenceManager
@@ -427,7 +436,32 @@ public class DeskClock extends FragmentActivity implements
       prefsBackgroundColor = Color.BLACK;
     }
     layout.setBackgroundColor(prefsBackgroundColor);
-
+    
+    b = prefs.getBoolean("pref_use_background_image", false);
+    if (b != prefsUseBackgroundImage) {
+      prefsUseBackgroundImage = b;
+      needsResizing = true;
+    }
+    
+    s = prefs.getString("pref_background_image", null);
+    if(s == null) {
+      if(prefsBackgroundImage != null) {
+        prefsBackgroundImage = null;
+        prefsBackgroundImageUri = null;
+        needsResizing = true;
+      }
+    } else if(prefsBackgroundImage == null || !s.equals(prefsBackgroundImage)) {
+      try {
+        prefsBackgroundImageUri = Uri.parse(s);
+        prefsBackgroundImage = s;
+      } catch (Exception e) {
+        Log.e(LOG_TAG,"Unable to parse background image URI: "+s);
+        prefsBackgroundImage = null;
+        prefsBackgroundImageUri = null;
+      } 
+      needsResizing = true;
+    }
+    
     b = prefs.getBoolean("pref_show_seconds", false);
     if (b != prefsShowSeconds) {
       prefsShowSeconds = b;
@@ -628,6 +662,21 @@ public class DeskClock extends FragmentActivity implements
     display.setFont(fonts[prefsFont]);
     display.setPadding(leftPadding, 0, 0, 0);
     display.setSize(fontSize);
+    
+    if(prefsUseBackgroundImage && prefsBackgroundImageUri != null) {
+      String[] filePathColumn = {MediaStore.Images.Media.DATA};
+      Cursor cursor = getContentResolver().query(prefsBackgroundImageUri, filePathColumn, null, null, null);
+      if (cursor.moveToFirst()) {
+          int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+          String filePath = cursor.getString(columnIndex);
+
+          Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+          display.setBackgroundDrawable(new BitmapDrawable(bitmap));
+      }
+      cursor.close();
+    } else {
+      display.setBackgroundDrawable(null);
+    }
 
     needsResizing = false;
   }
